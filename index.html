@@ -8,21 +8,20 @@
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
-            background-color: #f0fdf4;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden;
         }
         .card {
             text-align: center;
             background: white;
-            padding: 50px 40px;
+            padding: 40px 30px;
             border-radius: 24px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-            max-width: 500px;
+            max-width: 450px;
             width: 90%;
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.8);
@@ -30,17 +29,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            transition: all 0.5s ease-in-out;
+            margin: 20px 0;
         }
         h1 {
             color: #0f172a;
-            font-size: 2.4em;
+            font-size: 2.2em;
             margin-bottom: 10px;
             font-weight: 700;
         }
         p {
             color: #64748b;
             font-size: 1.1em;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
         .btn-group {
             display: flex;
@@ -74,7 +75,6 @@
             color: #64748b;
             border: 1px solid #e2e8f0;
             transform: scale(1);
-            /* Essential styles to allow the button to jump around the viewport */
             position: relative;
             z-index: 5;
         }
@@ -84,19 +84,183 @@
             color: #475569;
             display: none;
         }
+
+        /* --- PLANNER SCHEDULER STYLES --- */
+        .planner-section {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.6s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .step-container {
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .step-container.active {
+            display: flex;
+        }
+        .input-date {
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border-radius: 12px;
+            border: 2px solid #cbd5e1;
+            color: #334155;
+            outline: none;
+            width: 80%;
+            max-width: 280px;
+            transition: border-color 0.3s;
+            margin-bottom: 20px;
+        }
+        .input-date:focus {
+            border-color: #3b82f6;
+        }
+        .grid-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+        .option-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background: #f8fafc;
+        }
+        .option-card:hover {
+            transform: translateY(-3px);
+            border-color: #93c5fd;
+        }
+        .option-card.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .option-card span {
+            display: block;
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+        .option-card label {
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+        }
+        .next-step-btn {
+            background-color: #3b82f6;
+            color: white;
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
+            font-size: 1.05em;
+            padding: 12px 30px;
+        }
+        .next-step-btn:hover {
+            background-color: #2563eb;
+        }
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 25px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #cbd5e1;
+            transition: background-color 0.3s;
+        }
+        .dot.active {
+            background-color: #3b82f6;
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1 id="mainQuestion">Will you go out with me? 🏹</h1>
-    <p id="subText">Think carefully...</p>
-    
-    <div class="btn-group" id="actionContainer">
-        <button id="yesBtn" onclick="submitAnswer('Absolutely Yes!')">Yes!</button>
-        <button id="noBtn" onclick="growYesButton()" onmouseover="growYesButton()">No</button>
+    <!-- Main Proposal Section -->
+    <div id="proposalSection">
+        <h1 id="mainQuestion">Will you go out with me? 🏹</h1>
+        <p id="subText">Think carefully...</p>
+        
+        <div class="btn-group" id="actionContainer">
+            <button id="yesBtn" onclick="startPlanner()">Yes!</button>
+            <button id="noBtn" onclick="growYesButton()" onmouseover="growYesButton()">No</button>
+        </div>
     </div>
 
+    <!-- Date Planner Section (Revealed after pressing Yes) -->
+    <div class="planner-section" id="plannerSection">
+        <h1 id="plannerTitle">Let's plan our date! 🥰</h1>
+        <p id="plannerSubtitle">Step 1: Pick a day that works for you</p>
+
+        <!-- Step 1: Calendar Selection -->
+        <div class="step-container active" id="step1">
+            <input type="date" id="dateInput" class="input-date">
+            <button class="next-step-btn" onclick="goToStep(2)">Next Step ➡️</button>
+        </div>
+
+        <!-- Step 2: Food Selection -->
+        <div class="step-container" id="step2">
+            <div class="grid-options">
+                <div class="option-card" onclick="selectOption('food', 'Burgers & Fries 🍔')">
+                    <span>🍔</span>
+                    <label>Burgers & Fries</label>
+                </div>
+                <div class="option-card" onclick="selectOption('food', 'Sushi Night 🍣')">
+                    <span>🍣</span>
+                    <label>Sushi Night</label>
+                </div>
+                <div class="option-card" onclick="selectOption('food', 'Italian Pasta 🍝')">
+                    <span>🍝</span>
+                    <label>Italian Pasta</label>
+                </div>
+                <div class="option-card" onclick="selectOption('food', 'Fancy Steak 🥩')">
+                    <span>🥩</span>
+                    <label>Fancy Steak</label>
+                </div>
+            </div>
+            <button class="next-step-btn" onclick="goToStep(3)">Next Step ➡️</button>
+        </div>
+
+        <!-- Step 3: Dessert Selection -->
+        <div class="step-container" id="step3">
+            <div class="grid-options">
+                <div class="option-card" onclick="selectOption('dessert', 'Ice Cream Sundae 🍦')">
+                    <span>🍦</span>
+                    <label>Ice Cream Sundae</label>
+                </div>
+                <div class="option-card" onclick="selectOption('dessert', 'Chocolate Cake 🍰')">
+                    <span>🍰</span>
+                    <label>Chocolate Cake</label>
+                </div>
+                <div class="option-card" onclick="selectOption('dessert', 'Sweet Boba Tea 🧋')">
+                    <span>🧋</span>
+                    <label>Sweet Boba Tea</label>
+                </div>
+                <div class="option-card" onclick="selectOption('dessert', 'French Macarons 🧁')">
+                    <span>🧁</span>
+                    <label>French Macarons</label>
+                </div>
+            </div>
+            <button class="next-step-btn" onclick="finalizeAndSubmit()">Lock it in! 🔒</button>
+        </div>
+
+        <!-- Pagination Dots Indicator -->
+        <div class="progress-dots">
+            <div class="dot active" id="dot1"></div>
+            <div class="dot" id="dot2"></div>
+            <div class="dot" id="dot3"></div>
+        </div>
+    </div>
+
+    <!-- Final System Notifications -->
     <div class="status-message" id="notification"></div>
 </div>
 
@@ -110,6 +274,11 @@
     let yesScale = 1;
     let noScale = 1;
 
+    // Selections storage
+    let selectedDate = "";
+    let selectedFood = "";
+    let selectedDessert = "";
+
     const funnyTexts = [
         "Are you sure? 🤔",
         "Think again! 🥺",
@@ -118,6 +287,10 @@
         "Click the green one! 👉",
         "Last chance! 😤"
     ];
+
+    // Set minimum date picker limitation to today dynamically
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateInput').setAttribute('min', today);
 
     function growYesButton() {
         clickCount++;
@@ -129,14 +302,12 @@
         // 2. Shrink No button slightly and teleport it
         noScale -= 0.1;
         
-        // Calculate random screen coordinates, keeping the button safely on screen
         const maxX = window.innerWidth - noBtn.offsetWidth - 40;
         const maxY = window.innerHeight - noBtn.offsetHeight - 40;
         
         const randomX = Math.max(20, Math.floor(Math.random() * maxX));
         const randomY = Math.max(20, Math.floor(Math.random() * maxY));
         
-        // Switch to absolute positioning to move across the entire viewport
         noBtn.style.position = 'fixed';
         noBtn.style.left = randomX + 'px';
         noBtn.style.top = randomY + 'px';
@@ -155,13 +326,70 @@
         }
     }
 
-    function submitAnswer(chosenOption) {
-        document.getElementById('actionContainer').style.display = 'none';
-        document.getElementById('subText').style.display = 'none';
+    // Transit from proposal into the date sequence
+    function startPlanner() {
+        document.getElementById('proposalSection').style.display = 'none';
+        document.getElementById('plannerSection').style.display = 'flex';
+    }
+
+    // Handles picking food & dessert cards visually and programmatically
+    function selectOption(type, value) {
+        const currentStepId = type === 'food' ? 'step2' : 'step3';
+        const cards = document.querySelectorAll(`#${currentStepId} .option-card`);
+        
+        cards.forEach(card => card.classList.remove('selected'));
+        
+        // Find clicked element wrapper card context
+        const eventTarget = window.event.currentTarget;
+        eventTarget.classList.add('selected');
+
+        if (type === 'food') selectedFood = value;
+        if (type === 'dessert') selectedDessert = value;
+    }
+
+    // Step routing logic controller
+    function goToStep(stepNumber) {
+        // Validation check flags
+        if (stepNumber === 2) {
+            const dateValue = document.getElementById('dateInput').value;
+            if (!dateValue) {
+                alert("Please select a valid date first! 📅");
+                return;
+            }
+            selectedDate = dateValue;
+            document.getElementById('plannerSubtitle').innerText = "Step 2: What are we eating? 🍽️";
+        }
+
+        if (stepNumber === 3) {
+            if (!selectedFood) {
+                alert("Please select something to eat! 😋");
+                return;
+            }
+            document.getElementById('plannerSubtitle').innerText = "Step 3: Any room for dessert? 🧁";
+        }
+
+        // Cycle through DOM visual elements update
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`step${i}`).classList.remove('active');
+            document.getElementById(`dot${i}`).classList.remove('active');
+        }
+
+        document.getElementById(`step${stepNumber}`).classList.add('active');
+        document.getElementById(`dot${stepNumber}`).classList.add('active');
+    }
+
+    // Compile responses payload package and forward safely to Formspree endpoint backend API
+    function finalizeAndSubmit() {
+        if (!selectedDessert) {
+            alert("Please pick a dessert or sweet treat! 🍦");
+            return;
+        }
+
+        document.getElementById('plannerSection').style.display = 'none';
         
         const status = document.getElementById('notification');
         status.style.display = 'block';
-        status.innerHTML = "Locking in your answer... 🔒";
+        status.innerHTML = "Locking in our perfect date plan... 🔒";
 
         fetch(FORMSPREE_ENDPOINT, {
             method: 'POST',
@@ -170,21 +398,27 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                Response: chosenOption,
+                ProposalResponse: "Absolutely Yes!",
                 AttemptsAtNo: clickCount,
+                ScheduledDate: selectedDate,
+                DinnerChoice: selectedFood,
+                DessertChoice: selectedDessert,
                 SentAt: new Date().toLocaleString()
             })
         })
         .then(res => {
             if (res.ok) {
-                document.getElementById('mainQuestion').innerHTML = "Best decision ever! 🥰✨";
-                status.innerHTML = `Can't wait! Check your phone, details coming soon! (It took you ${clickCount} tries to click Yes though! 😉)`;
+                status.innerHTML = `
+                    <h2 style="color: #0f172a; margin-bottom: 8px;">Best decision ever! 🥰✨</h2>
+                    <p style="color: #475569;">It's official! We are going out on <b>${selectedDate}</b> for <b>${selectedFood}</b> and ending with <b>${selectedDessert}</b>!<br><br>
+                    Check your phone, details coming soon! (It took you ${clickCount} tries to click Yes though! 😉)</p>
+                `;
             } else {
-                status.innerHTML = "Ah, system error! Just text me your answer directly instead. 😉";
+                status.innerHTML = "Ah, system error! Just text me your date choice combinations directly instead. 😉";
             }
         })
         .catch(() => {
-            status.innerHTML = "Network glitch! Just tell me your answer in person. ✨";
+            status.innerHTML = "Network glitch! Just tell me your answers in person. ✨";
         });
     }
 </script>

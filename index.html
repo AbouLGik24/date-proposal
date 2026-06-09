@@ -1,359 +1,193 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>I Have a Question For You... 😊</title>
-
     <style>
-
         body {
-
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-
             background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
-
             background-color: #f0fdf4;
-
             display: flex;
-
             justify-content: center;
-
             align-items: center;
-
             height: 100vh;
-
             margin: 0;
-
             overflow: hidden;
-
         }
-
         .card {
-
             text-align: center;
-
             background: white;
-
             padding: 50px 40px;
-
             border-radius: 24px;
-
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-
             max-width: 500px;
-
             width: 90%;
-
             position: relative;
-
             border: 1px solid rgba(255, 255, 255, 0.8);
-
             display: flex;
-
             flex-direction: column;
-
             align-items: center;
-
             justify-content: center;
-
         }
-
         h1 {
-
             color: #0f172a;
-
             font-size: 2.4em;
-
             margin-bottom: 10px;
-
             font-weight: 700;
-
         }
-
         p {
-
             color: #64748b;
-
             font-size: 1.1em;
-
             margin-bottom: 40px;
-
         }
-
         .btn-group {
-
             display: flex;
-
             justify-content: center;
-
             gap: 25px;
-
             align-items: center;
-
             width: 100%;
-
-            flex-wrap: wrap; /* Allows large Yes button to push No button down gracefully */
-
+            flex-wrap: wrap; 
         }
-
         button {
-
             padding: 16px 36px;
-
             font-size: 1.2em;
-
             border: none;
-
             border-radius: 50px;
-
             cursor: pointer;
-
             font-weight: 600;
-
-            transition: all 0.2s ease-in-out;
-
+            transition: transform 0.2s ease-in-out, background-color 0.2s;
         }
-
         #yesBtn {
-
             background-color: #10b981;
-
             color: white;
-
             box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
-
             transform: scale(1);
-
             z-index: 10;
-
         }
-
         #yesBtn:hover {
-
             background-color: #059669;
-
         }
-
         #noBtn {
-
             background-color: #f1f5f9;
-
             color: #64748b;
-
             border: 1px solid #e2e8f0;
-
             transform: scale(1);
-
+            /* Essential styles to allow the button to jump around the viewport */
+            position: relative;
+            z-index: 5;
         }
-
         .status-message {
-
             margin-top: 25px;
-
             font-size: 1.1em;
-
             color: #475569;
-
             display: none;
-
         }
-
     </style>
-
 </head>
-
 <body>
 
-
-
 <div class="card">
-
     <h1 id="mainQuestion">Will you go out with me? 🏹</h1>
-
     <p id="subText">Think carefully...</p>
-
     
-
     <div class="btn-group" id="actionContainer">
-
         <button id="yesBtn" onclick="submitAnswer('Absolutely Yes!')">Yes!</button>
-
-        <button id="noBtn" onclick="growYesButton()">No</button>
-
+        <button id="noBtn" onclick="growYesButton()" onmouseover="growYesButton()">No</button>
     </div>
 
-
-
     <div class="status-message" id="notification"></div>
-
 </div>
 
-
-
 <script>
-
     const yesBtn = document.getElementById('yesBtn');
-
     const noBtn = document.getElementById('noBtn');
-
     
-
-    // Keeping your Formspree endpoint from image_26f388.jpg intact
-
     const FORMSPREE_ENDPOINT = "https://formspree.io/f/xkoabalb";
 
-
-
     let clickCount = 0;
-
     let yesScale = 1;
-
     let noScale = 1;
 
-
-
-    // Fun messages that cycle as she keeps pressing No
-
     const funnyTexts = [
-
         "Are you sure? 🤔",
-
         "Think again! 🥺",
-
         "Wrong button! 👀",
-
         "Don't do this to me... 💔",
-
         "Click the green one! 👉",
-
         "Last chance! 😤"
-
     ];
 
-
-
     function growYesButton() {
-
         clickCount++;
-
         
-
         // 1. Make Yes button bigger
-
         yesScale += 0.35; 
-
         yesBtn.style.transform = `scale(${yesScale})`;
-
         
-
-        // 2. Shrink No button
-
-        noScale -= 0.15;
-
+        // 2. Shrink No button slightly and teleport it
+        noScale -= 0.1;
+        
+        // Calculate random screen coordinates, keeping the button safely on screen
+        const maxX = window.innerWidth - noBtn.offsetWidth - 40;
+        const maxY = window.innerHeight - noBtn.offsetHeight - 40;
+        
+        const randomX = Math.max(20, Math.floor(Math.random() * maxX));
+        const randomY = Math.max(20, Math.floor(Math.random() * maxY));
+        
+        // Switch to absolute positioning to move across the entire viewport
+        noBtn.style.position = 'fixed';
+        noBtn.style.left = randomX + 'px';
+        noBtn.style.top = randomY + 'px';
         noBtn.style.transform = `scale(${noScale})`;
 
-
-
-        // 3. Update the subtitle hint text randomly to be playful
-
+        // 3. Update the subtitle hint text
         const subText = document.getElementById('subText');
-
         if (clickCount <= funnyTexts.length) {
-
             subText.innerHTML = funnyTexts[clickCount - 1];
-
         }
-
-
 
         // 4. Completely eliminate the No button after 6 attempts
-
         if (clickCount >= 6) {
-
             noBtn.style.display = 'none';
-
             subText.innerHTML = "Look at that, you have no choice left! 😏";
-
         }
-
     }
-
-
 
     function submitAnswer(chosenOption) {
-
         document.getElementById('actionContainer').style.display = 'none';
-
         document.getElementById('subText').style.display = 'none';
-
         
-
         const status = document.getElementById('notification');
-
         status.style.display = 'block';
-
         status.innerHTML = "Locking in your answer... 🔒";
 
-
-
         fetch(FORMSPREE_ENDPOINT, {
-
             method: 'POST',
-
             headers: {
-
                 'Accept': 'application/json',
-
                 'Content-Type': 'application/json'
-
             },
-
             body: JSON.stringify({
-
                 Response: chosenOption,
-
                 AttemptsAtNo: clickCount,
-
                 SentAt: new Date().toLocaleString()
-
             })
-
         })
-
         .then(res => {
-
             if (res.ok) {
-
                 document.getElementById('mainQuestion').innerHTML = "Best decision ever! 🥰✨";
-
                 status.innerHTML = `Can't wait! Check your phone, details coming soon! (It took you ${clickCount} tries to click Yes though! 😉)`;
-
             } else {
-
                 status.innerHTML = "Ah, system error! Just text me your answer directly instead. 😉";
-
             }
-
         })
-
         .catch(() => {
-
             status.innerHTML = "Network glitch! Just tell me your answer in person. ✨";
-
         });
-
     }
-
 </script>
 
-
-
 </body>
-
 </html>

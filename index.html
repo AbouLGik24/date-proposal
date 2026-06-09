@@ -24,6 +24,7 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
             max-width: 500px;
             width: 90%;
+            height: 400px; /* Fixed height keeps the container stable while buttons move */
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.8);
             display: flex;
@@ -48,7 +49,8 @@
             gap: 25px;
             align-items: center;
             width: 100%;
-            flex-wrap: wrap; /* Allows large Yes button to push No button down gracefully */
+            height: 150px;
+            position: relative;
         }
         button {
             padding: 16px 36px;
@@ -57,13 +59,12 @@
             border-radius: 50px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.2s ease-in-out;
+            transition: transform 0.2s ease-in-out;
         }
         #yesBtn {
             background-color: #10b981;
             color: white;
             box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
-            transform: scale(1);
             z-index: 10;
         }
         #yesBtn:hover {
@@ -73,7 +74,8 @@
             background-color: #f1f5f9;
             color: #64748b;
             border: 1px solid #e2e8f0;
-            transform: scale(1);
+            position: absolute; /* Allows it to move independently */
+            z-index: 5;
         }
         .status-message {
             margin-top: 25px;
@@ -91,7 +93,7 @@
     
     <div class="btn-group" id="actionContainer">
         <button id="yesBtn" onclick="submitAnswer('Absolutely Yes!')">Yes!</button>
-        <button id="noBtn" onclick="growYesButton()">No</button>
+        <button id="noBtn" onmouseover="dodgeAndGrow()" onclick="dodgeAndGrow()">No</button>
     </div>
 
     <div class="status-message" id="notification"></div>
@@ -100,45 +102,59 @@
 <script>
     const yesBtn = document.getElementById('yesBtn');
     const noBtn = document.getElementById('noBtn');
+    const container = document.getElementById('actionContainer');
     
-    // Keeping your Formspree endpoint from image_26f388.jpg intact
+    // Keeping your Formspree endpoint perfectly intact
     const FORMSPREE_ENDPOINT = "https://formspree.io/f/xkoabalb";
 
     let clickCount = 0;
     let yesScale = 1;
     let noScale = 1;
 
-    // Fun messages that cycle as she keeps pressing No
     const funnyTexts = [
         "Are you sure? 🤔",
         "Think again! 🥺",
         "Wrong button! 👀",
         "Don't do this to me... 💔",
         "Click the green one! 👉",
-        "Last chance! 😤"
+        "Just give up and say yes! 😉"
     ];
 
-    function growYesButton() {
+    function dodgeAndGrow() {
         clickCount++;
         
-        // 1. Make Yes button bigger
-        yesScale += 0.35; 
+        // 1. Grow the Yes Button
+        yesScale += 0.3; 
         yesBtn.style.transform = `scale(${yesScale})`;
         
-        // 2. Shrink No button
-        noScale -= 0.15;
+        // 2. Shrink the No Button a bit
+        noScale -= 0.1;
+        if(noScale < 0.4) noScale = 0.4; // Don't let it disappear completely until the end
         noBtn.style.transform = `scale(${noScale})`;
 
-        // 3. Update the subtitle hint text randomly to be playful
+        // 3. Move the No Button to a random spot inside the button container area
+        const containerRect = container.getBoundingClientRect();
+        const btnRect = noBtn.getBoundingClientRect();
+
+        const maxHorizontal = containerRect.width - btnRect.width;
+        const maxVertical = containerRect.height - btnRect.height;
+
+        const randomX = Math.floor(Math.random() * maxHorizontal);
+        const randomY = Math.floor(Math.random() * maxVertical);
+
+        noBtn.style.left = randomX + "px";
+        noBtn.style.top = randomY + "px";
+
+        // 4. Update the text hints
         const subText = document.getElementById('subText');
         if (clickCount <= funnyTexts.length) {
             subText.innerHTML = funnyTexts[clickCount - 1];
         }
 
-        // 4. Completely eliminate the No button after 6 attempts
-        if (clickCount >= 6) {
+        // 5. Hide No button completely after 7 attempts
+        if (clickCount >= 7) {
             noBtn.style.display = 'none';
-            subText.innerHTML = "Look at that, you have no choice left! 😏";
+            subText.innerHTML = "Look at that, you have no choices left! 😏";
         }
     }
 
@@ -165,7 +181,7 @@
         .then(res => {
             if (res.ok) {
                 document.getElementById('mainQuestion').innerHTML = "Best decision ever! 🥰✨";
-                status.innerHTML = `Can't wait! Check your phone, details coming soon! (It took you ${clickCount} tries to click Yes though! 😉)`;
+                status.innerHTML = `Can't wait! Check your phone, details coming soon!`;
             } else {
                 status.innerHTML = "Ah, system error! Just text me your answer directly instead. 😉";
             }

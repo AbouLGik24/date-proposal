@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #e0f2fe 0%, #chbeff 100%);
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
             background-color: #f0fdf4;
             display: flex;
             justify-content: center;
@@ -22,10 +22,14 @@
             padding: 50px 40px;
             border-radius: 24px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-            max-width: 420px;
+            max-width: 500px;
             width: 90%;
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         h1 {
             color: #0f172a;
@@ -43,7 +47,8 @@
             justify-content: center;
             gap: 25px;
             align-items: center;
-            min-height: 120px;
+            width: 100%;
+            flex-wrap: wrap; /* Allows large Yes button to push No button down gracefully */
         }
         button {
             padding: 16px 36px;
@@ -51,16 +56,15 @@
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
             font-weight: 600;
-        }
-        button:active {
-            transform: scale(0.95);
+            transition: all 0.2s ease-in-out;
         }
         #yesBtn {
             background-color: #10b981;
             color: white;
             box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+            transform: scale(1);
+            z-index: 10;
         }
         #yesBtn:hover {
             background-color: #059669;
@@ -68,8 +72,8 @@
         #noBtn {
             background-color: #f1f5f9;
             color: #64748b;
-            position: absolute;
             border: 1px solid #e2e8f0;
+            transform: scale(1);
         }
         .status-message {
             margin-top: 25px;
@@ -87,31 +91,55 @@
     
     <div class="btn-group" id="actionContainer">
         <button id="yesBtn" onclick="submitAnswer('Absolutely Yes!')">Yes!</button>
-        <button id="noBtn" onmouseover="dodgeButton()" onclick="submitAnswer('No')">No</button>
+        <button id="noBtn" onclick="growYesButton()">No</button>
     </div>
 
     <div class="status-message" id="notification"></div>
 </div>
 
 <script>
+    const yesBtn = document.getElementById('yesBtn');
     const noBtn = document.getElementById('noBtn');
-    const card = document.querySelector('.card');
     
-    // Linked your specific Formspree endpoint from image_26f388.jpg
+    // Keeping your Formspree endpoint from image_26f388.jpg intact
     const FORMSPREE_ENDPOINT = "https://formspree.io/f/xkoabalb";
 
-    function dodgeButton() {
-        const cardRect = card.getBoundingClientRect();
-        const btnRect = noBtn.getBoundingClientRect();
+    let clickCount = 0;
+    let yesScale = 1;
+    let noScale = 1;
 
-        const maxHorizontal = cardRect.width - btnRect.width - 40;
-        const maxVertical = cardRect.height - btnRect.height - 40;
+    // Fun messages that cycle as she keeps pressing No
+    const funnyTexts = [
+        "Are you sure? 🤔",
+        "Think again! 🥺",
+        "Wrong button! 👀",
+        "Don't do this to me... 💔",
+        "Click the green one! 👉",
+        "Last chance! 😤"
+    ];
 
-        const randomX = Math.max(20, Math.floor(Math.random() * maxHorizontal));
-        const randomY = Math.max(120, Math.floor(Math.random() * maxVertical));
+    function growYesButton() {
+        clickCount++;
+        
+        // 1. Make Yes button bigger
+        yesScale += 0.35; 
+        yesBtn.style.transform = `scale(${yesScale})`;
+        
+        // 2. Shrink No button
+        noScale -= 0.15;
+        noBtn.style.transform = `scale(${noScale})`;
 
-        noBtn.style.left = randomX + "px";
-        noBtn.style.top = randomY + "px";
+        // 3. Update the subtitle hint text randomly to be playful
+        const subText = document.getElementById('subText');
+        if (clickCount <= funnyTexts.length) {
+            subText.innerHTML = funnyTexts[clickCount - 1];
+        }
+
+        // 4. Completely eliminate the No button after 6 attempts
+        if (clickCount >= 6) {
+            noBtn.style.display = 'none';
+            subText.innerHTML = "Look at that, you have no choice left! 😏";
+        }
     }
 
     function submitAnswer(chosenOption) {
@@ -130,18 +158,14 @@
             },
             body: JSON.stringify({
                 Response: chosenOption,
+                AttemptsAtNo: clickCount,
                 SentAt: new Date().toLocaleString()
             })
         })
         .then(res => {
             if (res.ok) {
-                if(chosenOption === 'Absolutely Yes!') {
-                    document.getElementById('mainQuestion').innerHTML = "Best decision ever! 🥰✨";
-                    status.innerHTML = "Can't wait! Check your phone, details coming soon.";
-                } else {
-                    document.getElementById('mainQuestion').innerHTML = "Wait, how did you click that? 🤔";
-                    status.innerHTML = "Impressive reflexes! Your 'No' was registered.";
-                }
+                document.getElementById('mainQuestion').innerHTML = "Best decision ever! 🥰✨";
+                status.innerHTML = `Can't wait! Check your phone, details coming soon! (It took you ${clickCount} tries to click Yes though! 😉)`;
             } else {
                 status.innerHTML = "Ah, system error! Just text me your answer directly instead. 😉";
             }

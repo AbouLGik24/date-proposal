@@ -19,37 +19,36 @@
         .card {
             text-align: center;
             background: white;
-            padding: 50px 40px;
+            padding: 40px;
             border-radius: 24px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-            max-width: 500px;
+            max-width: 450px;
             width: 90%;
-            height: 450px; /* Slight extra room for dynamic scaling */
-            position: relative;
+            height: 400px; 
+            position: relative; /* Acts as the master boundary anchor for the moving button */
             border: 1px solid rgba(255, 255, 255, 0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
         }
         h1 {
             color: #0f172a;
             font-size: 2.4em;
+            margin-top: 40px;
             margin-bottom: 10px;
             font-weight: 700;
         }
         p {
             color: #64748b;
             font-size: 1.1em;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .btn-group {
             display: flex;
             justify-content: center;
-            gap: 25px;
             align-items: center;
             width: 100%;
-            height: 180px;
+            height: 150px;
             position: relative;
         }
         button {
@@ -59,13 +58,15 @@
             border-radius: 50px;
             cursor: pointer;
             font-weight: 600;
-            transition: transform 0.2s ease-in-out;
+            transition: transform 0.15s ease-in-out;
         }
         #yesBtn {
             background-color: #10b981;
             color: white;
             box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
             z-index: 10;
+            position: absolute;
+            left: 70px; /* Locked nicely on the left side of center */
         }
         #yesBtn:hover {
             background-color: #059669;
@@ -75,13 +76,13 @@
             color: #64748b;
             border: 1px solid #e2e8f0;
             position: absolute; 
-            z-index: 5;
-            /* Fixed initial starting positions so it loads next to the Yes button */
-            left: 58%; 
-            top: 40%;
+            z-index: 20;
+            /* Explicit pixel placement keeps it free to be overridden by JS */
+            left: 240px; 
+            top: 50px;
         }
         .status-message {
-            margin-top: 25px;
+            margin-top: 20px;
             font-size: 1.1em;
             color: #475569;
             display: none;
@@ -96,7 +97,8 @@
     
     <div class="btn-group" id="actionContainer">
         <button id="yesBtn" onclick="submitAnswer('Absolutely Yes!')">Yes!</button>
-        <button id="noBtn" onmouseover="dodgeAndGrow()" onclick="dodgeAndGrow()">No</button>
+        <!-- Listeners track both desktop mouse-hovers and mobile taps instantly -->
+        <button id="noBtn" onmouseenter="dodgeAndGrow()" onclick="dodgeAndGrow()">No</button>
     </div>
 
     <div class="status-message" id="notification"></div>
@@ -105,13 +107,12 @@
 <script>
     const yesBtn = document.getElementById('yesBtn');
     const noBtn = document.getElementById('noBtn');
-    const container = document.getElementById('actionContainer');
+    const card = document.querySelector('.card');
     
     const FORMSPREE_ENDPOINT = "https://formspree.io/f/xkoabalb";
 
     let clickCount = 0;
     let yesScale = 1;
-    let noScale = 1;
 
     const funnyTexts = [
         "Are you sure? 🤔",
@@ -125,36 +126,32 @@
     function dodgeAndGrow() {
         clickCount++;
         
-        // 1. Grow the Yes Button
+        // 1. Grow the Yes Button smoothly
         yesScale += 0.3; 
         yesBtn.style.transform = `scale(${yesScale})`;
         
-        // 2. Shrink the No Button slightly
-        noScale -= 0.08;
-        if(noScale < 0.4) noScale = 0.4; 
-        noBtn.style.transform = `scale(${noScale})`;
-
-        // 3. Keep moving the No Button within safe container boundaries
-        const containerRect = container.getBoundingClientRect();
+        // 2. Move the No Button to an explicit pixel location inside the card boundaries
+        const cardRect = card.getBoundingClientRect();
         const btnRect = noBtn.getBoundingClientRect();
 
-        const maxHorizontal = containerRect.width - btnRect.width;
-        const maxVertical = containerRect.height - btnRect.height;
+        // Safe boundaries inside the white card frame padding
+        const maxHorizontal = cardRect.width - btnRect.width - 40;
+        const maxVertical = cardRect.height - btnRect.height - 140; // Keep space clear away from heading text
 
-        // Ensure calculations stay within safe viewport padding limits
-        const randomX = Math.max(10, Math.floor(Math.random() * (maxHorizontal - 20)));
-        const randomY = Math.max(10, Math.floor(Math.random() * (maxVertical - 20)));
+        const randomX = Math.max(20, Math.floor(Math.random() * maxHorizontal));
+        const randomY = Math.max(140, Math.floor(Math.random() * maxVertical));
 
+        // Setting directly to inline styles to override CSS positioning
         noBtn.style.left = randomX + "px";
         noBtn.style.top = randomY + "px";
 
-        // 4. Update texts dynamically
+        // 3. Cycle playful subtitle texts
         const subText = document.getElementById('subText');
         if (clickCount <= funnyTexts.length) {
             subText.innerHTML = funnyTexts[clickCount - 1];
         }
 
-        // 5. Hide completely after 8 frantic attempts
+        // 4. Safety net: make it disappear completely after 8 frantic attempts
         if (clickCount >= 8) {
             noBtn.style.display = 'none';
             subText.innerHTML = "Look at that, you have no choices left! 😏";
@@ -190,4 +187,10 @@
             }
         })
         .catch(() => {
-            status.innerHTML = "Network glitch! Just tell
+            status.innerHTML = "Network glitch! Just tell me your answer in person. ✨";
+        });
+    }
+</script>
+
+</body>
+</html>

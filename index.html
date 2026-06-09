@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Have a Question For You... 😊</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #chbeff 100%);
+            background-color: #f0fdf4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .card {
+            text-align: center;
+            background: white;
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            max-width: 420px;
+            width: 90%;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        h1 {
+            color: #0f172a;
+            font-size: 2.4em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        p {
+            color: #64748b;
+            font-size: 1.1em;
+            margin-bottom: 40px;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            align-items: center;
+            min-height: 120px;
+        }
+        button {
+            padding: 16px 36px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            font-weight: 600;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        #yesBtn {
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        #yesBtn:hover {
+            background-color: #059669;
+        }
+        #noBtn {
+            background-color: #f1f5f9;
+            color: #64748b;
+            position: absolute;
+            border: 1px solid #e2e8f0;
+        }
+        .status-message {
+            margin-top: 25px;
+            font-size: 1.1em;
+            color: #475569;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1 id="mainQuestion">Will you go out with me? 🏹</h1>
+    <p id="subText">Think carefully...</p>
+    
+    <div class="btn-group" id="actionContainer">
+        <button id="yesBtn" onclick="submitAnswer('Absolutely Yes!')">Yes!</button>
+        <button id="noBtn" onmouseover="dodgeButton()" onclick="submitAnswer('No')">No</button>
+    </div>
+
+    <div class="status-message" id="notification"></div>
+</div>
+
+<script>
+    const noBtn = document.getElementById('noBtn');
+    const card = document.querySelector('.card');
+    
+    // Linked your specific Formspree endpoint from image_26f388.jpg
+    const FORMSPREE_ENDPOINT = "https://formspree.io/f/xkoabalb";
+
+    function dodgeButton() {
+        const cardRect = card.getBoundingClientRect();
+        const btnRect = noBtn.getBoundingClientRect();
+
+        const maxHorizontal = cardRect.width - btnRect.width - 40;
+        const maxVertical = cardRect.height - btnRect.height - 40;
+
+        const randomX = Math.max(20, Math.floor(Math.random() * maxHorizontal));
+        const randomY = Math.max(120, Math.floor(Math.random() * maxVertical));
+
+        noBtn.style.left = randomX + "px";
+        noBtn.style.top = randomY + "px";
+    }
+
+    function submitAnswer(chosenOption) {
+        document.getElementById('actionContainer').style.display = 'none';
+        document.getElementById('subText').style.display = 'none';
+        
+        const status = document.getElementById('notification');
+        status.style.display = 'block';
+        status.innerHTML = "Locking in your answer... 🔒";
+
+        fetch(FORMSPREE_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                Response: chosenOption,
+                SentAt: new Date().toLocaleString()
+            })
+        })
+        .then(res => {
+            if (res.ok) {
+                if(chosenOption === 'Absolutely Yes!') {
+                    document.getElementById('mainQuestion').innerHTML = "Best decision ever! 🥰✨";
+                    status.innerHTML = "Can't wait! Check your phone, details coming soon.";
+                } else {
+                    document.getElementById('mainQuestion').innerHTML = "Wait, how did you click that? 🤔";
+                    status.innerHTML = "Impressive reflexes! Your 'No' was registered.";
+                }
+            } else {
+                status.innerHTML = "Ah, system error! Just text me your answer directly instead. 😉";
+            }
+        })
+        .catch(() => {
+            status.innerHTML = "Network glitch! Just tell me your answer in person. ✨";
+        });
+    }
+</script>
+
+</body>
+</html>

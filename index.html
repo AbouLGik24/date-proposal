@@ -24,7 +24,7 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
             max-width: 500px;
             width: 90%;
-            height: 400px; /* Fixed height keeps the container stable while buttons move */
+            height: 450px; /* Slight extra room for dynamic scaling */
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.8);
             display: flex;
@@ -41,7 +41,7 @@
         p {
             color: #64748b;
             font-size: 1.1em;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
         .btn-group {
             display: flex;
@@ -49,7 +49,7 @@
             gap: 25px;
             align-items: center;
             width: 100%;
-            height: 150px;
+            height: 180px;
             position: relative;
         }
         button {
@@ -74,8 +74,11 @@
             background-color: #f1f5f9;
             color: #64748b;
             border: 1px solid #e2e8f0;
-            position: absolute; /* Allows it to move independently */
+            position: absolute; 
             z-index: 5;
+            /* Fixed initial starting positions so it loads next to the Yes button */
+            left: 58%; 
+            top: 40%;
         }
         .status-message {
             margin-top: 25px;
@@ -104,7 +107,6 @@
     const noBtn = document.getElementById('noBtn');
     const container = document.getElementById('actionContainer');
     
-    // Keeping your Formspree endpoint perfectly intact
     const FORMSPREE_ENDPOINT = "https://formspree.io/f/xkoabalb";
 
     let clickCount = 0;
@@ -127,32 +129,33 @@
         yesScale += 0.3; 
         yesBtn.style.transform = `scale(${yesScale})`;
         
-        // 2. Shrink the No Button a bit
-        noScale -= 0.1;
-        if(noScale < 0.4) noScale = 0.4; // Don't let it disappear completely until the end
+        // 2. Shrink the No Button slightly
+        noScale -= 0.08;
+        if(noScale < 0.4) noScale = 0.4; 
         noBtn.style.transform = `scale(${noScale})`;
 
-        // 3. Move the No Button to a random spot inside the button container area
+        // 3. Keep moving the No Button within safe container boundaries
         const containerRect = container.getBoundingClientRect();
         const btnRect = noBtn.getBoundingClientRect();
 
         const maxHorizontal = containerRect.width - btnRect.width;
         const maxVertical = containerRect.height - btnRect.height;
 
-        const randomX = Math.floor(Math.random() * maxHorizontal);
-        const randomY = Math.floor(Math.random() * maxVertical);
+        // Ensure calculations stay within safe viewport padding limits
+        const randomX = Math.max(10, Math.floor(Math.random() * (maxHorizontal - 20)));
+        const randomY = Math.max(10, Math.floor(Math.random() * (maxVertical - 20)));
 
         noBtn.style.left = randomX + "px";
         noBtn.style.top = randomY + "px";
 
-        // 4. Update the text hints
+        // 4. Update texts dynamically
         const subText = document.getElementById('subText');
         if (clickCount <= funnyTexts.length) {
             subText.innerHTML = funnyTexts[clickCount - 1];
         }
 
-        // 5. Hide No button completely after 7 attempts
-        if (clickCount >= 7) {
+        // 5. Hide completely after 8 frantic attempts
+        if (clickCount >= 8) {
             noBtn.style.display = 'none';
             subText.innerHTML = "Look at that, you have no choices left! 😏";
         }
@@ -187,10 +190,4 @@
             }
         })
         .catch(() => {
-            status.innerHTML = "Network glitch! Just tell me your answer in person. ✨";
-        });
-    }
-</script>
-
-</body>
-</html>
+            status.innerHTML = "Network glitch! Just tell
